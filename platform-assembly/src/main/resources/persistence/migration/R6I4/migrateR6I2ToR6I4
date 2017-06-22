@@ -1,0 +1,52 @@
+
+DROP PROCEDURE IF EXISTS migrate;
+DELIMITER $$
+CREATE PROCEDURE migrate(IN previousDBversion VARCHAR(80))
+BEGIN
+     DECLARE schema_id_val varchar(80);
+     select value into schema_id_val from database_identification where name='schema_id' and value = previousDBversion; 
+     IF schema_id_val IS NULL THEN
+          select "Error: This migration is applied to the wrong database version.";
+     ELSE
+        call do_migration;
+        update database_identification set value = @nextDBversion where name ='schema_id';
+     END IF;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS do_migration;
+DELIMITER $$
+CREATE PROCEDURE do_migration()
+BEGIN
+
+delete from component_spec where deleted = 1;
+delete from component_spec where component_type = 'gov.nasa.arc.mct.core.components.TelemetryAllDropBoxComponent';
+alter table component_spec drop column deleted, drop column shared;
+drop table edit_locks;
+
+insert into tag (tag_id) values ('bootstrap:admin');
+insert into tag (tag_id) values ('bootstrap:creator');
+
+set @userDropBoxesId = replace(uuid(), '-', '');
+insert into component_spec (component_id, component_name, creator_user_id, owner, external_key, component_type, date_created) values (@userDropBoxesId, 'User Drop Boxes', 'admin', 'admin', '/UserDropBoxes', 'gov.nasa.arc.mct.core.components.TelemetryDataTaxonomyComponent', CURRENT_TIMESTAMP);
+
+insert into tag_association (tag_id, component_id) select 'bootstrap:admin', component_id from component_spec where external_key in ('/Systems', '/Disciplines', '/Plato Predictions', '/UserDropBoxes'); 
+insert into tag_association (tag_id, component_id) select 'bootstrap:creator', component_id from component_spec where component_type = 'gov.nasa.arc.mct.core.components.MineTaxonomyComponent';
+
+set @seq_no = -1;
+insert into component_relationship (component_id, associated_component_id, seq_no) select @userDropBoxesId, component_id, (@seq_no := @seq_no + 1) from component_spec where component_type = 'gov.nasa.arc.mct.core.components.TelemetryUserDropBoxComponent' order by component_name asc;
+
+delete from component_spec where creator_user_id = 'admin' and owner = 'admin' and component_name like '%''s Drop Boxes';
+delete from component_spec where creator_user_id = 'admin' and owner = 'admin' and external_key = '/';
+END $$
+DELIMITER ;
+
+
+---- Migrate 
+set @previousDBversion = '$Revision: 6370 $';
+set @nextDBversion = '$Revision: 6867 $';
+call migrate(@previousDBversion);
+
+DROP PROCEDURE IF EXISTS migrate;
+        
+

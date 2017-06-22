@@ -1,0 +1,34 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Relational Database persistence
+Bundle-SymbolicName: gov.nasa.arc.mct.databasepersistence
+Bundle-Version: 1.1.0
+Import-Package: 
+ gov.nasa.arc.mct.api.persistence;version="1.1.0",
+ gov.nasa.arc.mct.components;version="1.1.0",
+ gov.nasa.arc.mct.gui;version="1.1.0",
+ gov.nasa.arc.mct.platform.spi;version="1.1.0",
+ gov.nasa.arc.mct.policy;version="1.1.0",
+ gov.nasa.arc.mct.services.component;version="1.1.0",
+ gov.nasa.arc.mct.services.internal.component;version="1.1.0",
+ org.osgi.service.component;version="1.1.0",
+ com.mysql.jdbc;version="5.1.16",
+ org.slf4j;version="1.5.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Service-Component: OSGI-INF/services.xml
+Bundle-ClassPath: 
+ 	., 
+ 	antlr-2.7.7.jar,
+ 	commons-collections-3.2.1.jar,
+ 	dom4j-1.6.1.jar,
+ 	hibernate-core-4.0.1.Final.jar,
+ 	hibernate-commons-annotations-4.0.1.Final.jar,
+ 	hibernate-entitymanager-4.0.1.Final.jar,
+ 	hibernate-jpa-2.0-api-1.0.1.Final.jar,
+ 	javassist-3.15.0-GA.jar,
+ 	jboss-logging-3.1.0.CR2.jar,
+ 	c3p0-0.9.1.jar,
+ 	hibernate-c3p0-4.0.1.Final.jar,
+ 	hibernate-ehcache-4.0.1.Final.jar,
+ 	ehcache-core-2.4.3.jar,
+ 	jboss-transaction-api_1.1_spec-1.0.0.Final.jar

@@ -1,0 +1,513 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http:/maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>mct</groupId>
+  <artifactId>mct-superpom</artifactId>
+  <packaging>pom</packaging>
+  <name>MCT Super Pom</name>
+  <version>2.0.0</version>
+  <description>This is the pom which sets up a complete MCT build from source. </description>
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+         <artifactId>wagon-ssh-external</artifactId>
+         <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
+  	<pluginManagement>
+  		<plugins>
+		      <plugin>
+    <artifactId>maven-clean-plugin</artifactId>
+     <version>2.4.1</version>
+    <configuration>
+       <filesets>
+      <fileset>
+       <directory>bin</directory>
+      </fileset>
+      <fileset>
+       <directory>logs</directory>
+      </fileset>
+	        <fileset>
+       <directory>test-output</directory>
+      </fileset>
+                 </filesets>
+              </configuration>
+            </plugin>
+  		  	<plugin>
+  				<groupId>com.atlassian.maven.plugins</groupId>
+  				<artifactId>maven-clover2-plugin</artifactId>
+  				<version>${clover.version}</version>
+				<configuration>
+     				<licenseLocation>${M2_REPO}/clover.license</licenseLocation>
+     				<jdk>1.6</jdk>
+     				<excludes>
+     					<exclude>**/*Test.java</exclude>
+     					<exclude>**/Test*.java</exclude>
+     					<exclude>**/Mock*.java</exclude>
+     					<exclude>**/*Mock.java</exclude>
+     					<exclude>**/*dbloader/**/*.java</exclude>
+     					<exclude>**/org/acme/**/*.java</exclude>
+     				</excludes>
+     				<contextFilters>assert</contextFilters>
+     				<!--  
+     				<reportDescriptor>${project.build.dir}/../clover-report.xml</reportDescriptor>
+     			    -->
+     				<historyDir>${project.build.dir}</historyDir>
+				</configuration>
+  			</plugin>
+  		  <plugin>
+  				<groupId>org.apache.maven.plugins</groupId>
+  				<artifactId>maven-antrun-plugin</artifactId>
+  				<version>1.3</version>
+	  			<dependencies>
+					<dependency>
+						<groupId>ant</groupId>
+						<artifactId>ant-optional</artifactId>
+						<version>1.5.2</version>
+					</dependency>
+	  			</dependencies>
+  		</plugin>
+  	</plugins>
+  </pluginManagement>
+  <plugins>
+    	<plugin>
+ 			<groupId>org.apache.maven.plugins</groupId>
+ 			<artifactId>maven-site-plugin</artifactId>
+ 			<version>2.0</version>
+ 			<configuration>
+ 				<outputEncoding>UTF-8</outputEncoding>
+ 			</configuration>
+ 		</plugin>
+ 		  <plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-surefire-plugin</artifactId>
+  			<version>${surefire.version}</version>
+  			<configuration>
+ 				<forkMode>once</forkMode>
+ 				<excludeGroups>heavyGUI</excludeGroups>
+				<systemPropertyVariables>
+					<derby.stream.error.file>${project.build.directory}/derby.log</derby.stream.error.file>
+					<log4j.configuration>file:${basedir}/../superpom/src/test/resources/test-log4j.xml</log4j.configuration>
+				</systemPropertyVariables>
+  			</configuration>
+  		</plugin>
+  		  		<plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-resources-plugin</artifactId>
+  			<version>2.4</version>
+  			<configuration>
+  				<encoding>ISO-8859-1</encoding>
+  			</configuration>
+  		</plugin>
+  		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-source-plugin</artifactId>
+			<version>2.1.1</version>
+			<configuration>
+				<excludeResources>true</excludeResources>
+			</configuration>
+			<executions>
+				<execution>
+					<id>attach-sources</id>
+					<phase>prepare-package</phase>
+					<goals>
+						<goal>jar-no-fork</goal>
+					</goals>
+				</execution>
+				<execution>
+					<id>aggregate-sources</id>
+					<phase>package</phase>
+					<goals>
+						<goal>aggregate</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+  		<plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-jar-plugin</artifactId>
+  			<version>2.3</version>
+  			<configuration>
+  				<archive>
+  					<compress>false</compress>
+  				</archive>
+  			</configuration>
+  		</plugin>
+  		<plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-compiler-plugin</artifactId>
+  			<version>2.3.2</version>
+  			<configuration>
+  				<source>1.6</source>
+  				<target>1.6</target>
+  				<encoding>ISO-8859-1</encoding>
+  				<compilerArguments>
+  					<Werror />
+  					<Xlint:all />
+  					<Xlint:-path />
+  				</compilerArguments>
+            	<showDeprecation>true</showDeprecation>
+  			</configuration>
+  		</plugin>
+  </plugins>
+ </build>
+ <profiles>
+  	<profile>
+  		<id>clover</id>
+  		<activation>
+  			<property>
+  				<name>clover</name>
+  				<value>true</value>
+  			</property>
+  		</activation>
+  		<build>
+  			<plugins>
+  				<plugin>
+  					<groupId>com.atlassian.maven.plugins</groupId>
+  					<artifactId>maven-clover2-plugin</artifactId>
+  					<executions>
+						<execution>
+							<id>clover-main</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>instrument</goal>
+								<goal>aggregate</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>clover-site</id>
+							<phase>pre-site</phase>
+							<goals>
+								<goal>instrument</goal>
+								<goal>aggregate</goal>
+							</goals>
+						</execution>
+  					</executions>
+  				</plugin>
+  				<plugin>
+  					<groupId>org.apache.maven.plugins</groupId>
+  					<artifactId>maven-antrun-plugin</artifactId>
+ 					<version>1.3</version>
+					<dependencies>
+						<dependency>
+							<groupId>ant</groupId>
+							<artifactId>ant-trax</artifactId>
+							<version>1.6.5</version>
+						</dependency>
+					</dependencies>
+   					<inherited>false</inherited>
+  					<executions>
+  						<execution>
+  							<id>check-coverage</id>
+  							<phase>site</phase>
+  							<goals>
+  								<goal>run</goal>
+  							</goals>
+  							<configuration>
+  								<tasks>
+  									<ant antfile="src/build/resources/build.xml"
+  									    dir="."
+  									    inheritAll="false">
+  										<property name="project.build.directory" location="${project.build.directory}" />
+  										<property name="build.resources.directory" location="superpom/src/build/resources" />
+  									</ant>
+  								</tasks>
+  							</configuration>
+  						</execution>
+  					</executions>
+  				</plugin>
+  			</plugins>
+  		</build>
+  		<reporting>
+  			<plugins>
+  				<plugin>
+  					<groupId>com.atlassian.maven.plugins</groupId>
+  					<artifactId>maven-clover2-plugin</artifactId>
+  					<version>${clover.version}</version>
+  					<inherited>true</inherited>
+	  				<configuration>
+	       				<generateXml>true</generateXml>
+	       				<generateHtml>true</generateHtml>
+	   				</configuration>
+  				</plugin>
+  			</plugins>
+  		</reporting>
+  	</profile>
+  	<profile>
+  		<id>findbugs</id>
+  		<activation>
+  			<property>
+  				<name>findbugs</name>
+  				<value>true</value>
+  			</property>
+  		</activation>
+  		<build>
+  			<plugins>
+  			<plugin>
+  				<groupId>org.apache.maven.plugins</groupId>
+  				<artifactId>maven-antrun-plugin</artifactId>
+  				<version>1.3</version>
+	  			<dependencies>
+					<dependency>
+						<groupId>ant</groupId>
+						<artifactId>ant-optional</artifactId>
+						<version>1.5.2</version>
+					</dependency>
+	  			</dependencies>
+	  				<executions>
+		  				<execution>
+		  					<id>copy-findbugs-reports</id>
+		  					<phase>site</phase>
+		  					<configuration>
+		  						<tasks>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/canvas" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/canvas" >
+		  								<fileset dir="${findbugs.project.dir}/canvas/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/collectionComponent" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/collectionComponent" >
+		  								<fileset dir="${findbugs.project.dir}/collectionComponent/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/evaluatorComponent" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/evaluatorComponent" >
+		  								<fileset dir="${findbugs.project.dir}/evaluatorComponent/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/executableButtons" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/executableButtons" >
+		  								<fileset dir="${findbugs.project.dir}/executableButtons/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/dynamicGraphics" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/dynamicGraphics" >
+		  								<fileset dir="${findbugs.project.dir}/dynamicGraphics/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<!-- plotViews -->
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/fastPlotViews" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/fastPlotViews" >
+		  								<fileset dir="${findbugs.project.dir}/fastPlotViews/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/Plotter" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/Plotter" >
+		  								<fileset dir="${findbugs.project.dir}/Plotter/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<!-- subscriptionManager -->
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/subscriptionManager" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/subscriptionManager" >
+		  								<fileset dir="${findbugs.project.dir}/subscriptionManager/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<!-- tableViews -->
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/tableViews" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/tableViews" >
+		  								<fileset dir="${findbugs.project.dir}/tableViews/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<!-- timeSequenceFeedAggregator -->
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/timeSequenceFeedAggregator" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/timeSequenceFeedAggregator" >
+		  								<fileset dir="${findbugs.project.dir}/timeSequenceFeedAggregator/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/platform" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/platform" >
+		  								<fileset dir="${findbugs.project.dir}/platform/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/serviceConfigurator" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/serviceConfigurator" >
+		  								<fileset dir="${findbugs.project.dir}/serviceConfigurator/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/util" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/util" >
+		  								<fileset dir="${findbugs.project.dir}/util/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/databasePersistence" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/databasePersistence" >
+		  								<fileset dir="${findbugs.project.dir}/databasePersistence/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/exampleplugin" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/exampleplugin" >
+		  								<fileset dir="${findbugs.project.dir}/exampleplugin/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/mctcore" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/mctcore" >
+		  								<fileset dir="${findbugs.project.dir}/mctcore/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/mctCoreTaxonomyProvider" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/mctCoreTaxonomyProvider" >
+		  								<fileset dir="${findbugs.project.dir}/mctCoreTaxonomyProvider/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/mctLastBundleMarker" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/mctLastBundleMarker" >
+		  								<fileset dir="${findbugs.project.dir}/mctLastBundleMarker/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  							<mkdir dir="${findbugs.project.dir}/platform-assembly/target/site/tests" />
+		  							<copy failonerror="false" todir="${findbugs.project.dir}/platform-assembly/target/site/tests" >
+		  								<fileset dir="${findbugs.project.dir}/tests/target/site/">
+		  									<include name="*.html" />
+											<include name="images/*.*" />
+		  								</fileset>
+		  							</copy>
+		  						</tasks>
+		  					</configuration>
+		  					<goals>
+		  						<goal>run</goal>
+		  					</goals>
+		  				</execution>
+		  			</executions>
+		  		</plugin>
+  			</plugins>
+  		</build>
+  		  <reporting>
+  			<plugins>
+  				<plugin>
+ 					<groupId>org.codehaus.mojo</groupId>
+ 					<artifactId>findbugs-maven-plugin</artifactId>
+ 					<version>2.3</version>
+ 					<configuration>
+          				<xmlOutput>true</xmlOutput>
+						<effort>Max</effort>
+						<onlyAnalyze>gov.nasa.-</onlyAnalyze>
+        			</configuration>		
+ 				</plugin>
+ 				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>dashboard-maven-plugin</artifactId>
+				</plugin>		
+  			</plugins>
+  		</reporting>
+  	</profile>
+  	<profile>
+  		<id>distribution-compile</id>
+  		<activation>
+  			<property>
+  				<name>distribution</name>
+  				<value>true</value>
+  			</property>
+  		</activation>
+  		<modules>
+  			<module>../devtools</module>
+  		</modules>
+  	</profile>
+  </profiles>
+  <dependencies>
+  	<dependency>
+  		<groupId>org.testng</groupId>
+  		<artifactId>testng</artifactId>
+  		<version>5.8</version>
+  		<classifier>jdk15</classifier>
+  		<scope>provided</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>slf4j-api</artifactId>
+  		<version>1.5.6</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>slf4j-log4j12</artifactId>
+  		<version>1.5.6</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>jcl-over-slf4j</artifactId>
+  		<version>1.5.6</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.mockito</groupId>
+  		<artifactId>mockito-all</artifactId>
+  		<version>1.8.2</version>
+  		<scope>provided</scope>
+    </dependency>
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>5.1.16</version>
+	</dependency>
+  	<dependency>
+  		<groupId>org.osgi</groupId>
+  		<artifactId>org.osgi.core</artifactId>
+  		<version>4.2.0</version>
+  		<scope>provided</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.osgi</groupId>
+  		<artifactId>org.osgi.compendium</artifactId>
+  		<version>4.2.0</version>
+  		<scope>provided</scope>
+  	</dependency>
+  </dependencies>
+   <pluginRepositories>
+  	<pluginRepository>
+  		<id>Codehaus repository</id>
+  		<url>http://repository.codehaus.org/</url>
+  	</pluginRepository>
+  </pluginRepositories>
+  <reporting>
+  	<plugins>
+ 		<plugin>
+ 			<groupId>org.apache.maven.plugins</groupId>
+ 			<artifactId>maven-surefire-report-plugin</artifactId>
+ 			<version>${surefire.version}</version>
+ 			<inherited>true</inherited>
+ 			<configuration>
+ 				<aggregate>true</aggregate>
+ 				<linkXRef>false</linkXRef>
+ 			</configuration>
+ 		</plugin>
+ 	</plugins>
+  </reporting>
+  <properties>
+  	<surefire.version>2.5</surefire.version>
+	<clover.version>2.6.1</clover.version>
+  </properties>
+</project>
